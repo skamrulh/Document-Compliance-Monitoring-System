@@ -1,0 +1,29 @@
+groups:
+  - name: compliance_api_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status_code=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 2m
+        labels: {severity: critical}
+        annotations:
+          summary: "High error rate on Compliance API"
+          description: "More than 5% of requests are returning 5xx errors."
+      - alert: SlowResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "Slow API response time"
+          description: "p95 latency exceeds 2 seconds."
+      - alert: APIDown
+        expr: up{job="fastapi"} == 0
+        for: 1m
+        labels: {severity: critical}
+        annotations:
+          summary: "Compliance API is down"
+      - alert: HighRiskDocumentSpike
+        expr: rate(documents_processed_total{risk_level="HIGH"}[10m]) > 0.5
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "Spike in HIGH-risk documents"
